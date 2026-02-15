@@ -1,0 +1,1 @@
+hello from LocalStack S3 sample file
