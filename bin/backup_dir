@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "$SCRIPT_DIR/../lib/common.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage: backup_dir [FLAGS] <source_dir> [dest_dir]
+
+Create a timestamped .tar.gz archive from a source directory.
+
+Flags:
+  -h, --help      Show help
+  -q, --quiet     Only print errors
+  -v, --verbose   Show debug output
+      --no-color  Disable color output
+      --version   Print toolbox version
+USAGE
+}
+
+tb_parse_common_flags "$@"
+set -- "${TB_POSITIONAL[@]}"
+
+if (( TB_SHOW_HELP == 1 )); then
+  usage
+  exit 0
+fi
+
+(( $# >= 1 && $# <= 2 )) || die "Usage: backup_dir <source_dir> [dest_dir]"
+
+source_dir=$1
+dest_dir=${2:-.}
+
+[[ -d "$source_dir" ]] || die "Source directory not found: $source_dir"
+[[ -d "$dest_dir" ]] || die "Destination directory not found: $dest_dir"
+
+source_name=$(basename "$source_dir")
+timestamp=$(date +%Y%m%d_%H%M%S)
+archive_path="$dest_dir/${source_name}_backup_${timestamp}.tar.gz"
+
+log_debug "Creating archive: $archive_path"
+tar -czf "$archive_path" -C "$(dirname "$source_dir")" "$source_name"
+log_info "Backup created: $archive_path"
+printf '%s\n' "$archive_path"

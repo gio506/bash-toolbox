@@ -2,20 +2,42 @@ name: CI
 
 on:
   push:
+    branches: [main, dev]
   pull_request:
+    branches: [main]
 
 jobs:
-  lint-and-test:
+  shellcheck:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install ShellCheck
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Run shellcheck
+        run: shellcheck bin/* lib/*.sh tests/run_tests.sh
 
-      - name: ShellCheck
-        run: shellcheck bin/*.sh tests/*.sh
-
-      - name: Run tests
+  syntax-and-smoke:
+    runs-on: ubuntu-latest
+    needs: shellcheck
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax + smoke tests
         run: bash tests/run_tests.sh
+
+  bats:
+    runs-on: ubuntu-latest
+    needs: syntax-and-smoke
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bats
+        run: sudo apt-get update && sudo apt-get install -y bats
+      - name: Run bats tests
+        run: bats tests/bats
+
+  package-check:
+    runs-on: ubuntu-latest
+    needs: bats
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build tarball
+        run: make package-check
