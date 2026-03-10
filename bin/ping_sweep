@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "$SCRIPT_DIR/../lib/common.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage: ping_sweep [FLAGS] <subnet_prefix> [start_host] [end_host]
+
+Rate-limited ping sweep for authorized network ranges.
+Example subnet_prefix: 192.168.1
+USAGE
+}
+
+tb_parse_common_flags "$@"
+set -- "${TB_POSITIONAL[@]}"
+
+if (( TB_SHOW_HELP == 1 )); then
+  usage
+  exit 0
+fi
+
+(( $# >= 1 && $# <= 3 )) || die "Usage: ping_sweep <subnet_prefix> [start_host] [end_host]"
+
+subnet_prefix=$1
+start_host=${2:-1}
+end_host=${3:-20}
+
+[[ "$subnet_prefix" =~ ^([0-9]{1,3}\.){2}[0-9]{1,3}$ ]] || die "subnet_prefix must look like x.x.x"
+[[ "$start_host" =~ ^[0-9]+$ && "$end_host" =~ ^[0-9]+$ ]] || die "start_host and end_host must be integers"
+(( start_host >= 1 && end_host <= 254 && start_host <= end_host )) || die "host range must be within 1-254 and start <= end"
+
+for host in $(seq "$start_host" "$end_host"); do
+  ip="${subnet_prefix}.${host}"
+  if ping -c 1 -W 1 "$ip" >/dev/null 2>&1; then
+    printf 'UP   %s\n' "$ip"
+  else
+    printf 'DOWN %s\n' "$ip"
+  fi
+  sleep 0.2
+done
