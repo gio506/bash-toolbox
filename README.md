@@ -69,3 +69,24 @@ sudo apt-get install -y bats
 - `rotate_logs` permanently deletes older files beyond your keep count.
 - `backup_dir` can consume significant disk space; verify destination capacity first.
 - Review scripts before running `install.sh --yes` with elevated privileges.
+
+
+## CI pipeline (4 stages)
+
+The GitHub Actions workflow keeps a strict 4-stage gate for PRs from `dev` to `main`:
+
+1. **ShellCheck** (linting)
+2. **Bash syntax + smoke tests**
+3. **Bats tests**
+4. **Packaging check** (tarball build/verify)
+
+It triggers on:
+
+- push to `dev` and `main`
+- pull requests targeting `main`
+
+Best-practice notes:
+
+- uses pinned actions for reproducibility
+- uses least-privilege permissions (`contents: read`)
+- uses concurrency cancellation to avoid duplicate runs on rapid pushes
