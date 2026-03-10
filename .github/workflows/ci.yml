@@ -6,38 +6,61 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   shellcheck:
+    name: Stage 1 - ShellCheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-      - name: Run shellcheck
-        run: shellcheck bin/* lib/*.sh tests/run_tests.sh
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: './bin ./lib ./tests'
+          severity: warning
 
   syntax-and-smoke:
+    name: Stage 2 - Bash syntax + smoke tests
     runs-on: ubuntu-latest
     needs: shellcheck
     steps:
-      - uses: actions/checkout@v4
-      - name: Bash syntax + smoke tests
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run syntax + smoke tests
         run: bash tests/run_tests.sh
 
   bats:
+    name: Stage 3 - Bats tests
     runs-on: ubuntu-latest
     needs: syntax-and-smoke
     steps:
-      - uses: actions/checkout@v4
-      - name: Install bats
-        run: sudo apt-get update && sudo apt-get install -y bats
-      - name: Run bats tests
-        run: bats tests/bats
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bats
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: 1.11.1
+
+      - name: Run Bats suite
+        run: bats --print-output-on-failure tests/bats
 
   package-check:
+    name: Stage 4 - Packaging check
     runs-on: ubuntu-latest
     needs: bats
     steps:
-      - uses: actions/checkout@v4
-      - name: Build tarball
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and verify tarball
         run: make package-check
