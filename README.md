@@ -73,7 +73,7 @@ sudo apt-get install -y bats
 
 ## CI pipeline (4 stages)
 
-The GitHub Actions workflow keeps a strict 4-stage gate for PRs from `dev` to `main`:
+The GitHub Actions workflow keeps a strict 4-stage gate for PRs into `dev`/`main` and for pushes to those branches:
 
 1. **ShellCheck** (linting)
 2. **Bash syntax + smoke tests**
@@ -83,7 +83,8 @@ The GitHub Actions workflow keeps a strict 4-stage gate for PRs from `dev` to `m
 It triggers on:
 
 - push to `dev` and `main`
-- pull requests targeting `main`
+- pull requests targeting `dev` or `main`
+- manual runs via `workflow_dispatch`
 
 Best-practice notes:
 
