@@ -8,7 +8,7 @@ fail() { echo "[FAIL] $1" >&2; exit 1; }
 pass() { echo "[PASS] $1"; }
 
 echo "Running bash syntax checks..."
-for script in bin/* lib/*.sh tests/run_tests.sh; do
+for script in bin/* lib/*.sh tests/run_tests.sh install.sh; do
   bash -n "$script" || fail "Syntax check failed: $script"
 done
 pass "bash -n syntax checks"
