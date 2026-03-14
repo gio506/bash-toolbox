@@ -15,18 +15,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  shellcheck:
-    name: Stage 1 - ShellCheck
+  structure-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify required files
+        shell: bash
+        run: |
+          required_files=(
+            "README.md"
+            "CHEATSHEET.md"
+            "FILES_EXPLAINED.md"
+            "install.sh"
+            "Makefile"
+            "lib/common.sh"
+            "tests/run_tests.sh"
+            "tests/bats/cli.bats"
+          )
+          for file in "${required_files[@]}"; do
+            test -f "$file" || {
+              echo "Missing required file: $file"
+              exit 1
+            }
+          done
+
+  shellcheck:
+    name: Stage 1 - ShellCheck
+    runs-on: ubuntu-latest
+    needs: structure-check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
       - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@2.0.0
-        with:
-          scandir: './bin ./lib ./tests'
-          severity: warning
+        run: shellcheck bin/* lib/*.sh tests/run_tests.sh install.sh
 
   syntax-and-smoke:
     name: Stage 2 - Bash syntax + smoke tests
@@ -65,3 +92,48 @@ jobs:
 
       - name: Build and verify tarball
         run: make package-check
+
+  markdown-lint:
+    name: Stage 5 - Markdown lint
+    runs-on: ubuntu-latest
+    needs: package-check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run markdownlint
+        run: |
+          npm install --global markdownlint-cli
+          markdownlint "**/*.md"
+
+  final-status-gate:
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - structure-check
+      - shellcheck
+      - syntax-and-smoke
+      - bats
+      - package-check
+      - markdown-lint
+    steps:
+      - name: Aggregate results
+        shell: bash
+        env:
+          STRUCTURE: ${{ needs.structure-check.result }}
+          SHELLCHECK: ${{ needs.shellcheck.result }}
+          SYNTAX: ${{ needs.syntax-and-smoke.result }}
+          BATS: ${{ needs.bats.result }}
+          PACKAGE: ${{ needs.package-check.result }}
+          MARKDOWN: ${{ needs.markdown-lint.result }}
+        run: |
+          for result in "$STRUCTURE" "$SHELLCHECK" "$SYNTAX" "$BATS" "$PACKAGE" "$MARKDOWN"; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              exit 1
+            fi
+          done

@@ -1,16 +1,39 @@
-# FILES_EXPLAINED
+# Files Explained
 
-- `.github/workflows/ci.yml` - GitHub Actions workflow used for PR and push checks.
-- `bin/backup_dir` - CLI that archives a source directory with a timestamped filename.
-- `bin/rotate_logs` - CLI that prunes old log files while keeping newest N files.
-- `bin/json_pretty` - CLI that formats JSON through Python's standard json tool.
-- `bin/ping_sweep` - CLI that pings a host range with built-in rate limiting.
-- `bin/disk_report` - CLI that prints filesystem and top-size item summaries.
-- `lib/common.sh` - Shared helper library for logs, colors, and common flags.
-- `tests/run_tests.sh` - Portable smoke tests and syntax checks.
-- `tests/bats/cli.bats` - Bats regression tests for CLI behavior.
-- `install.sh` - Dry-run-first symlink installer for `/usr/local/bin`.
-- `Makefile` - Convenient wrappers for lint, test, and package checks.
-- `README.md` - Primary project documentation and examples.
-- `CHEATSHEET.md` - Fast command index and usage snippets.
-- `FILES_EXPLAINED.md` - This file; explains each file in the repository.
+## Documentation
+
+- `README.md`
+  - Main project guide, usage overview, install notes, and CI summary.
+- `CHEATSHEET.md`
+  - Fast command reference with copy-paste examples.
+- `FILES_EXPLAINED.md`
+  - File-by-file explanation for learners and reviewers.
+
+## Scripts
+
+- `bin/backup_dir` and `bin/backup_dir.sh`
+  - Create a timestamped `.tar.gz` archive from a source directory.
+- `bin/rotate_logs` and `bin/rotate_logs.sh`
+  - Keep the newest N `.log` files and remove older ones.
+- `bin/json_pretty` and `bin/json_pretty.sh`
+  - Validate and pretty-print JSON.
+- `bin/ping_sweep` and `bin/ping_sweep.sh`
+  - Perform a small and rate-limited ping sweep.
+- `bin/disk_report` and `bin/disk_report.sh`
+  - Summarize disk usage and large files or directories.
+- `lib/common.sh`
+  - Shared helper functions for flags, colors, and logging.
+- `install.sh`
+  - Dry-run-first installer that can symlink the toolbox into `/usr/local/bin`.
+
+## Tests and CI
+
+- `tests/run_tests.sh`
+  - Runs syntax checks and safe execution checks for each tool.
+- `tests/bats/cli.bats`
+  - Bats regression tests for CLI behavior.
+- `.github/workflows/ci.yml`
+  - Runs structure checks, shell linting, smoke tests, Bats, packaging,
+    Markdown linting, and a final status gate.
+- `Makefile`
+  - Local wrappers for the main validation commands.
