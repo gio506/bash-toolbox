@@ -52,6 +52,10 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
+      - name: Normalize shell file line endings
+        run: |
+          find . -type f \( -name '*.sh' -o -path './bin/*' \) -print0 | xargs -0 sed -i 's/\r$//'
+
       - name: Run ShellCheck
         run: shellcheck bin/* lib/*.sh tests/run_tests.sh install.sh
 
