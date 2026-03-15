@@ -57,13 +57,12 @@ require_command() {
 }
 
 tb_parse_common_flags() {
-  # shellcheck disable=SC2034
-  TB_SHOW_HELP=0
+  export TB_SHOW_HELP=0
   TB_POSITIONAL=()
   while (($#)); do
     case "$1" in
       -h|--help)
-        TB_SHOW_HELP=1
+        export TB_SHOW_HELP=1
         ;;
       -q|--quiet)
         TB_LOG_LEVEL="quiet"
