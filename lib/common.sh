@@ -57,6 +57,7 @@ require_command() {
 }
 
 tb_parse_common_flags() {
+  # shellcheck disable=SC2034
   TB_SHOW_HELP=0
   TB_POSITIONAL=()
   while (($#)); do

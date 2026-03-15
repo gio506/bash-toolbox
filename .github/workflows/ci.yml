@@ -57,7 +57,7 @@ jobs:
           find . -type f \( -name '*.sh' -o -path './bin/*' \) -print0 | xargs -0 sed -i 's/\r$//'
 
       - name: Run ShellCheck
-        run: shellcheck bin/* lib/*.sh tests/run_tests.sh install.sh
+        run: shellcheck -x bin/* lib/*.sh tests/run_tests.sh install.sh
 
   syntax-and-smoke:
     name: Stage 2 - Bash syntax + smoke tests
